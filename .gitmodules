@@ -1,0 +1,6 @@
+[submodule "smackbe"]
+	path = smackbe
+	url = git@github.com:alfredats/smackbe.git
+[submodule "smackfe"]
+	path = smackfe
+	url = git@github.com:alfredats/smackfe.git
