@@ -28,7 +28,7 @@ spec:
         - containerPort: 80
         env:
         - name: NODE_IP
-          value: smack.alfredang.xyz
+          value: 146.190.94.139
         - name: SPRING_DATASOURCE_DRIVERCLASSNAME
           value: com.mysql.cj.jdbc.Driver
         - name: SPRING_DATASOURCE_URL

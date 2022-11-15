@@ -28,7 +28,7 @@ spec:
         - containerPort: 80
         env:
         - name: NODE_IP
-          value: smack.alfredang.xyz
+          value: 146.190.94.139
         - name: BACKEND_HOST
           value: http://$(NODE_IP)
         - name: BACKEND_PORT
