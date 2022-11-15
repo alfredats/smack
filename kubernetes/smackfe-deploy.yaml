@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: smack
-        image: alfredats/smack-fe:beta-1
+        image: alfredats/smack-fe:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
