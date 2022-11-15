@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: smackbe-deploy
+  namespace: smack
+  labels:
+    app: smack
+    type: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smack
+      type: backend
+  template:
+    metadata:
+      name: smack-pod
+      namespace: smack 
+      labels:
+        app: smack
+        type: backend
+    spec:
+      containers:
+      - name: smack
+        image: alfredats/smack-be:beta-1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        env:
+        - name: NODE_IP
+          value: 143.198.81.85 
+        - name: SPRING_DATASOURCE_DRIVERCLASSNAME
+          value: com.mysql.cj.jdbc.Driver
+        - name: SPRING_DATASOURCE_URL
+          # value: "jdbc:mysql///mysql-nodeport-svc.svc.smack.cluster.local/smack"
+          value: jdbc:mysql://$(NODE_IP):32306/smack
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: secret-mysql
+              key: username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-mysql
+              key: userpass
+        - name: MONGODB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: secret-mongo
+              key: username
+        - name: MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-mongo
+              key: password
+        - name: SPRING_DATA_MONGODB_URI
+          value: mongodb://$(MONGODB_USERNAME):$(MONGODB_PASSWORD)@$(NODE_IP):32017
+        - name: SPRING_RABBITMQ_HOST
+          value: $(NODE_IP)
+        - name: SPRING_RABBITMQ_PORT
+          value: "31672"
+        - name: SPRING_RABBITMQ_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: secret-rabbitmq
+              key: default_user
+        - name: SPRING_RABBITMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-rabbitmq
+              key: default_pass
+        - name: JWT_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: secret-springboot
+              key: jwtAuthSecret
+        - name: JWT_AUTH_VALIDITY
+          valueFrom:
+            secretKeyRef:
+              name: secret-springboot
+              key: jwtAuthValidity
+        - name: SPOTIFY_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: secret-springboot
+              key: spotifyClientID
+        - name: SPOTIFY_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: secret-springboot
+              key: spotifyClientSecret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smackbe-nodeport
+  namespace: smack
+  labels:
+    type: nodeport
+    env: dev
+spec:
+  selector:
+    app: smack
+    type: backend
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080

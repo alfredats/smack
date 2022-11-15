@@ -1,0 +1,4 @@
+**/kubernetes/secrets.yaml
+**/kubernetes/secret-*.yaml
+
+**/docker/*.list

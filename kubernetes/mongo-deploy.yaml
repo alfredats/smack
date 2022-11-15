@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: mongo-deploy
+  namespace: smack
+  labels:
+    app: mongo
+    type: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+      type: db
+  template:
+    metadata:
+      name: mongo-pod
+      namespace: smack 
+      labels:
+        app: mongo
+        type: db
+    spec:
+      containers:
+      - name: mongo
+        image: mongo
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-mongo
+              key: password
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: secret-mongo
+              key: username
+        - name: MONGO_INITDB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: secret-mongo
+              key: initDB
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-nodeport-svc
+  namespace: smack
+  labels:
+    type: nodeport
+    env: dev
+spec:
+  type: NodePort
+  selector:
+    app: mongo
+    type: db
+  ports:
+    - port: 27017
+      targetPort: 27017
+      nodePort: 32017

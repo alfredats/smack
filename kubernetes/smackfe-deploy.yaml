@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: smackfe-deploy
+  namespace: smack
+  labels:
+    app: smack
+    type: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smack
+      type: frontend
+  template:
+    metadata:
+      name: smack-pod
+      namespace: smack 
+      labels:
+        app: smack
+        type: frontend
+    spec:
+      containers:
+      - name: smack
+        image: alfredats/smack-fe:beta-1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        env:
+        - name: NODE_IP
+          value: 143.198.81.85 
+        - name: BACKEND_HOST
+          value: http://$(NODE_IP)
+        - name: BACKEND_PORT
+          value: "30080"
+        - name: WS_RELAY_HOST
+          value: $(NODE_IP)
+        - name: WS_RELAY_PORT
+          value: "31670"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smackfe-clusterip
+  namespace: smack
+  labels:
+    type: clusterip
+    env: dev
+spec:
+  selector:
+    app: smack
+    type: frontend
+  ports:
+    - port: 5000
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: smackfe-server-ingress
+  namespace: smack
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: smackfe-clusterip
+            port:
+              number: 5000

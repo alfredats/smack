@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: rabbitmq-deploy
+  namespace: smack
+  labels:
+    app: rabbitmq
+    type: messagebroker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+      type: messagebroker
+  template:
+    metadata:
+      name: rabbitmq-pod
+      namespace: smack 
+      labels:
+        app: rabbitmq
+        type: messagebroker
+    spec:
+      containers:
+      - name: rabbitmq
+        image: alfredats/rabbitmq:beta-1
+        ports:
+        - containerPort: 5672
+        env:
+        - name: RABBITMQ_USER
+          valueFrom:
+            secretKeyRef:
+              name: secret-rabbitmq
+              key: default_user
+        - name: RABBITMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-rabbitmq
+              key: default_pass
+      - name: rabbitmq-relay
+        image: cloudamqp/websocket-tcp-relay
+        args: ['--upstream', 'tcp://rabbitmq-nodeport-svc.smack.svc.cluster.local:5672'] 
+        ports:
+        - containerPort: 15670
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-nodeport-svc
+  namespace: smack
+  labels:
+    type: nodeport
+    env: dev
+spec:
+  type: NodePort
+  selector:
+    app: rabbitmq
+    type: messagebroker
+  ports:
+    - port: 5672 
+      targetPort: 5672
+      nodePort: 31672 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-relay-nodeport-svc
+  namespace: smack
+  labels:
+    type: nodeport
+    env: dev
+spec:
+  type: NodePort
+  selector:
+    app: rabbitmq
+    type: messagebroker
+  ports:
+    - port: 15670 
+      targetPort: 15670
+      nodePort: 31670
